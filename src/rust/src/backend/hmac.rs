@@ -36,7 +36,7 @@ impl Hmac {
 #[pyo3::pymethods]
 impl Hmac {
     #[new]
-    #[pyo3(signature = (key, algorithm, backend=None))]
+    // #[pyo3(signature = (key, algorithm, backend=None))]
     fn new(
         py: pyo3::Python<'_>,
         key: CffiBuf<'_>,

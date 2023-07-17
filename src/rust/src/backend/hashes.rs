@@ -6,6 +6,7 @@ use crate::buf::CffiBuf;
 use crate::error::{CryptographyError, CryptographyResult};
 use crate::exceptions;
 use std::borrow::Cow;
+use pyo3::types::PyType;
 
 #[pyo3::prelude::pyclass(module = "cryptography.hazmat.bindings._rust.openssl.hashes")]
 struct Hash {
@@ -40,9 +41,10 @@ pub(crate) fn message_digest_from_algorithm(
     py: pyo3::Python<'_>,
     algorithm: &pyo3::PyAny,
 ) -> CryptographyResult<openssl::hash::MessageDigest> {
-    let hash_algorithm_class = py
+    let hash_algorithm_class: &PyType = py
         .import(pyo3::intern!(py, "cryptography.hazmat.primitives.hashes"))?
-        .getattr(pyo3::intern!(py, "HashAlgorithm"))?;
+        .getattr(pyo3::intern!(py, "HashAlgorithm"))?
+        .downcast()?;
     if !algorithm.is_instance(hash_algorithm_class)? {
         return Err(CryptographyError::from(
             pyo3::exceptions::PyTypeError::new_err("Expected instance of hashes.HashAlgorithm."),
@@ -75,7 +77,7 @@ pub(crate) fn message_digest_from_algorithm(
 #[pyo3::pymethods]
 impl Hash {
     #[new]
-    #[pyo3(signature = (algorithm, backend=None))]
+    // #[pyo3(signature = (algorithm, backend=None))]
     fn new(
         py: pyo3::Python<'_>,
         algorithm: &pyo3::PyAny,
@@ -103,9 +105,10 @@ impl Hash {
     ) -> CryptographyResult<&'p pyo3::types::PyBytes> {
         #[cfg(not(any(CRYPTOGRAPHY_IS_LIBRESSL, CRYPTOGRAPHY_IS_BORINGSSL)))]
         {
-            let xof_class = py
+            let xof_class: &PyType = py
                 .import(pyo3::intern!(py, "cryptography.hazmat.primitives.hashes"))?
-                .getattr(pyo3::intern!(py, "ExtendableOutputFunction"))?;
+                .getattr(pyo3::intern!(py, "ExtendableOutputFunction"))?
+                .downcast()?;
             let algorithm = self.algorithm.clone_ref(py);
             let algorithm = algorithm.as_ref(py);
             if algorithm.is_instance(xof_class)? {

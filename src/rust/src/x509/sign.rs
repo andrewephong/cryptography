@@ -7,6 +7,7 @@ use crate::error::{CryptographyError, CryptographyResult};
 use crate::exceptions;
 use cryptography_x509::{common, oid};
 use once_cell::sync::Lazy;
+use pyo3::types::PyType;
 use std::collections::HashMap;
 
 // This is similar to a hashmap in ocsp.rs but contains more hash algorithms
@@ -147,8 +148,8 @@ fn compute_pss_salt_length<'p>(
         py,
         "cryptography.hazmat.primitives.asymmetric.padding"
     ))?;
-    let maxlen = padding_mod.getattr(pyo3::intern!(py, "_MaxLength"))?;
-    let digestlen = padding_mod.getattr(pyo3::intern!(py, "_DigestLength"))?;
+    let maxlen: &PyType = padding_mod.getattr(pyo3::intern!(py, "_MaxLength"))?.downcast()?;
+    let digestlen: &PyType = padding_mod.getattr(pyo3::intern!(py, "_DigestLength"))?.downcast()?;
     let py_saltlen = rsa_padding.getattr(pyo3::intern!(py, "_salt_length"))?;
     if py_saltlen.is_instance(maxlen)? {
         padding_mod
